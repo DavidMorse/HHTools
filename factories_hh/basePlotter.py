@@ -25,15 +25,15 @@ def default_code_before_loop():
             return 1;
         };
         std::array<FWBTagEfficiencyOnBDT, 3> fwBtagEff {
-            FWBTagEfficiencyOnBDT("/home/fynu/swertz/scratch/CMSSW_8_0_25/src/cp3_llbb/HHTools/DYEstimation/170311_btag_efficiency_systematics/btagging_efficiency.root", "/home/fynu/swertz/scratch/CMSSW_8_0_25/src/cp3_llbb/HHTools/DYEstimation/170311_btag_efficiency_systematics/btagging_scale_factors.root", "/home/fynu/swertz/scratch/CMSSW_8_0_25/src/cp3_llbb/HHTools/DYEstimation/170311_bb_cc_vs_rest_10var_dyFlavorFractions_systematics/mll_cut/flavour_fractions.root"),
-            FWBTagEfficiencyOnBDT("/home/fynu/swertz/scratch/CMSSW_8_0_25/src/cp3_llbb/HHTools/DYEstimation/170311_btag_efficiency_systematics/btagging_efficiency.root", "/home/fynu/swertz/scratch/CMSSW_8_0_25/src/cp3_llbb/HHTools/DYEstimation/170311_btag_efficiency_systematics/btagging_scale_factors.root", "/home/fynu/swertz/scratch/CMSSW_8_0_25/src/cp3_llbb/HHTools/DYEstimation/170311_bb_cc_vs_rest_10var_dyFlavorFractions_systematics/mll_peak/flavour_fractions.root"),
-            FWBTagEfficiencyOnBDT("/home/fynu/swertz/scratch/CMSSW_8_0_25/src/cp3_llbb/HHTools/DYEstimation/170311_btag_efficiency_systematics/btagging_efficiency.root", "/home/fynu/swertz/scratch/CMSSW_8_0_25/src/cp3_llbb/HHTools/DYEstimation/170311_btag_efficiency_systematics/btagging_scale_factors.root", "/home/fynu/swertz/scratch/CMSSW_8_0_25/src/cp3_llbb/HHTools/DYEstimation/170311_bb_cc_vs_rest_10var_dyFlavorFractions_systematics/mll_above_peak/flavour_fractions.root")
+            FWBTagEfficiencyOnBDT("/nfs/scratch/fynu/swertz/CMSSW_8_0_25/src/cp3_llbb/HHTools/DYEstimation/170311_btag_efficiency_systematics/btagging_efficiency.root", "/nfs/scratch/fynu/swertz/CMSSW_8_0_25/src/cp3_llbb/HHTools/DYEstimation/170311_btag_efficiency_systematics/btagging_scale_factors.root", "/nfs/scratch/fynu/swertz/CMSSW_8_0_25/src/cp3_llbb/HHTools/DYEstimation/170311_bb_cc_vs_rest_10var_dyFlavorFractions_systematics/mll_cut/flavour_fractions.root"),
+            FWBTagEfficiencyOnBDT("/nfs/scratch/fynu/swertz/CMSSW_8_0_25/src/cp3_llbb/HHTools/DYEstimation/170311_btag_efficiency_systematics/btagging_efficiency.root", "/nfs/scratch/fynu/swertz/CMSSW_8_0_25/src/cp3_llbb/HHTools/DYEstimation/170311_btag_efficiency_systematics/btagging_scale_factors.root", "/nfs/scratch/fynu/swertz/CMSSW_8_0_25/src/cp3_llbb/HHTools/DYEstimation/170311_bb_cc_vs_rest_10var_dyFlavorFractions_systematics/mll_peak/flavour_fractions.root"),
+            FWBTagEfficiencyOnBDT("/nfs/scratch/fynu/swertz/CMSSW_8_0_25/src/cp3_llbb/HHTools/DYEstimation/170311_btag_efficiency_systematics/btagging_efficiency.root", "/nfs/scratch/fynu/swertz/CMSSW_8_0_25/src/cp3_llbb/HHTools/DYEstimation/170311_btag_efficiency_systematics/btagging_scale_factors.root", "/nfs/scratch/fynu/swertz/CMSSW_8_0_25/src/cp3_llbb/HHTools/DYEstimation/170311_bb_cc_vs_rest_10var_dyFlavorFractions_systematics/mll_above_peak/flavour_fractions.root")
         };
 
 
         // DY BDT evaluation
         
-        TMVAEvaluator dy_bdt_reader("/home/fynu/swertz/scratch/CMSSW_8_0_25/src/cp3_llbb/HHTools/DYEstimation/weights/2017_02_17_BDTDY_bb_cc_vs_rest_10var_kBDT.weights.xml", { "jet1_pt",  "jet1_eta", "jet2_pt", "jet2_eta", "jj_pt", "ll_pt", "ll_eta", "llmetjj_DPhi_ll_met", "ht", "nJetsL" });
+        TMVAEvaluator dy_bdt_reader("/nfs/scratch/fynu/swertz/CMSSW_8_0_25/src/cp3_llbb/HHTools/DYEstimation/weights/2017_02_17_BDTDY_bb_cc_vs_rest_10var_kBDT.weights.xml", { "jet1_pt",  "jet1_eta", "jet2_pt", "jet2_eta", "jj_pt", "ll_pt", "ll_eta", "llmetjj_DPhi_ll_met", "ht", "nJetsL" });
         
         MVAEvaluatorCache<TMVAEvaluator> dy_bdt(dy_bdt_reader);
 
@@ -75,6 +75,9 @@ def default_code_before_loop():
                 nonResonantSignalKt = std::stod(m_dataset.sample_weight_args[2]);
             }
         }
+        
+        shouldCheckResonantSignalPoint = false;
+        shouldCheckNonResonantSignalPoint = false;
         
         auto checkResonantSignalPoint = [shouldCheckResonantSignalPoint, shouldCheckNonResonantSignalPoint, resonantSignalMass](double m) -> bool {
             if (shouldCheckNonResonantSignalPoint)
@@ -135,7 +138,7 @@ def default_headers():
             "flavor_weighted_btag_efficiency_on_bdt.h",
             "KerasModelEvaluator.h",
             "TMVAEvaluator.h",
-            "LWTNNEvaluator.h"
+            "LWTNNEvaluator.h",
             ]
 
 def default_include_directories(scriptDir):
@@ -227,17 +230,17 @@ class GridReweighting:
     def library_dirs(self):
         return [
                 os.path.join(self.scriptDir, "..", "common", "MatrixElements", "pp_hh_5coup", "build"),
-                "/home/fynu/swertz/scratch/Madgraph/cmssw_madgraph_lp/pp_hh_all_MV_standalone/SubProcesses/P0_gg_hh/",
-                "/home/fynu/swertz/scratch/Madgraph/cmssw_madgraph_lp/pp_hh_all_MV_standalone/SubProcesses/P1_gg_hh/",
-                "/home/fynu/swertz/scratch/Madgraph/cmssw_madgraph_lp/pp_hh_all_MV_standalone/SubProcesses/P2_gg_hh/",
-                os.path.join(self.scriptDir, "..", "common", "MatrixElements", "pp_hh_tree_MV", "build"),
+                #"/nfs/scratch/fynu/swertz/Madgraph/cmssw_madgraph_lp/pp_hh_all_MV_standalone/SubProcesses/P0_gg_hh/",
+                #"/nfs/scratch/fynu/swertz/Madgraph/cmssw_madgraph_lp/pp_hh_all_MV_standalone/SubProcesses/P1_gg_hh/",
+                #"/nfs/scratch/fynu/swertz/Madgraph/cmssw_madgraph_lp/pp_hh_all_MV_standalone/SubProcesses/P2_gg_hh/",
+                #os.path.join(self.scriptDir, "..", "common", "MatrixElements", "pp_hh_tree_MV", "build"),
             ]
 
     def libraries(self):
         return [
                 "libme_pp_hh_5coup.a",
-                "libhhWrapper0.a", "libhhWrapper1.a", "libhhWrapper2.a", "gfortran", "m", "quadmath",
-                "libme_pp_hh_tree_MV_standalone.a",
+                # "libhhWrapper0.a", "libhhWrapper1.a", "libhhWrapper2.a", "gfortran", "m", "quadmath",
+                # "libme_pp_hh_tree_MV_standalone.a",
             ]
 
     def sources(self):
@@ -546,6 +549,7 @@ class BasePlotter:
         self.genht_plot = []
 
         self.forSkimmer_plot = []
+        self.event_number_plot = []
 
         for cat in categories:
 
@@ -569,7 +573,7 @@ class BasePlotter:
                         'plot_cut': self.totalCut,
                         'binning': '(2, 0, 2)'
                 })
-            
+                
             # Neural network output
             def skimSignal2DCut(*args):
                 if len(args) == 1:
@@ -757,12 +761,12 @@ class BasePlotter:
                         'plot_cut': self.totalCut,
                         'binning': '(50, 65, 1500)'
                 },
-                #{
-                #        'name': 'llmetjj_MT2_%s_%s_%s%s'%(self.llFlav, self.suffix, self.extraString, self.systematicString),
-                #        'variable': self.baseObject+".MT2",
-                #        'plot_cut': self.totalCut,
-                #        'binning': '(50, 0, 500)'
-                #},
+                {
+                        'name': 'llmetjj_MT2_%s_%s_%s%s'%(self.llFlav, self.suffix, self.extraString, self.systematicString),
+                        'variable': self.baseObject+".MT2",
+                        'plot_cut': self.totalCut,
+                        'binning': '(50, 0, 500)'
+                },
                 {
                         'name': 'llmetjj_M_%s_%s_%s%s'%(self.llFlav, self.suffix, self.extraString, self.systematicString),
                         'variable': self.baseObject+".p4.M()",
@@ -775,12 +779,12 @@ class BasePlotter:
                         'plot_cut': self.totalCut,
                         'binning': '(25, 0, 1)'
                 },
-                #{
-                #        'name': 'llbb_M_%s_%s_%s%s'%(self.llFlav, self.suffix, self.extraString, self.systematicString),
-                #        'variable': "(" + self.ll_str + "+" + self.jj_str + ").M()",
-                #        'plot_cut': self.totalCut,
-                #        'binning': '(50, 200, 350)'
-                #},
+                {
+                        'name': 'lljj_M_%s_%s_%s%s'%(self.llFlav, self.suffix, self.extraString, self.systematicString),
+                        'variable': "(" + self.ll_str + "+" + self.jj_str + ").M()",
+                        'plot_cut': self.totalCut,
+                        'binning': '(50, 200, 350)'
+                },
             ])
             
             self.csv_plot.extend([
@@ -959,30 +963,30 @@ class BasePlotter:
                     'plot_cut': self.totalCut,
                     'binning': '(50, 0, 0.4)'
                 },
-                #{
-                #        'name': 'jet1_eta_%s_%s_%s%s'%(self.llFlav, self.suffix, self.extraString, self.systematicString),
-                #        'variable': self.jet1_str+".p4.Eta()",
-                #        'plot_cut': self.totalCut,
-                #        'binning': '(25, -2.5, 2.5)'
-                #},
-                #{
-                #        'name': 'jet1_phi_%s_%s_%s%s'%(self.llFlav, self.suffix, self.extraString, self.systematicString),
-                #        'variable': self.jet1_str+".p4.Phi()",
-                #        'plot_cut': self.totalCut,
-                #        'binning': '(25, -3.1416, 3.1416)'
-                #},
-                #{
-                #        'name': 'jet2_eta_%s_%s_%s%s'%(self.llFlav, self.suffix, self.extraString, self.systematicString),
-                #        'variable': self.jet2_str+".p4.Eta()",
-                #        'plot_cut': self.totalCut,
-                #        'binning': '(25, -2.5, 2.5)'
-                #},
-                #{
-                #        'name': 'jet2_phi_%s_%s_%s%s'%(self.llFlav, self.suffix, self.extraString, self.systematicString),
-                #        'variable': self.jet2_str+".p4.Phi()",
-                #        'plot_cut': self.totalCut,
-                #        'binning': '(25, -3.1416, 3.1416)'
-                #},
+                {
+                        'name': 'jet1_eta_%s_%s_%s%s'%(self.llFlav, self.suffix, self.extraString, self.systematicString),
+                        'variable': self.jet1_str+".p4.Eta()",
+                        'plot_cut': self.totalCut,
+                        'binning': '(25, -2.5, 2.5)'
+                },
+                {
+                        'name': 'jet1_phi_%s_%s_%s%s'%(self.llFlav, self.suffix, self.extraString, self.systematicString),
+                        'variable': self.jet1_str+".p4.Phi()",
+                        'plot_cut': self.totalCut,
+                        'binning': '(25, -3.1416, 3.1416)'
+                },
+                {
+                        'name': 'jet2_eta_%s_%s_%s%s'%(self.llFlav, self.suffix, self.extraString, self.systematicString),
+                        'variable': self.jet2_str+".p4.Eta()",
+                        'plot_cut': self.totalCut,
+                        'binning': '(25, -2.5, 2.5)'
+                },
+                {
+                        'name': 'jet2_phi_%s_%s_%s%s'%(self.llFlav, self.suffix, self.extraString, self.systematicString),
+                        'variable': self.jet2_str+".p4.Phi()",
+                        'plot_cut': self.totalCut,
+                        'binning': '(25, -3.1416, 3.1416)'
+                },
                 #{
                 #        'name': 'jet1_scaleFactor_%s_%s_%s%s'%(self.llFlav, self.suffix, self.extraString, self.systematicString),
                 #        'variable': get_csvv2_sf(self.btagWP1, self.jet1_fwkIdx),
@@ -995,12 +999,12 @@ class BasePlotter:
                 #        'plot_cut': self.totalCut,
                 #        'binning': '(50, 0.5, 1.5)'
                 #}
-                #{
-                #        'name': 'met_phi_%s_%s_%s%s'%(self.llFlav, self.suffix, self.extraString, self.systematicString),
-                #        'variable': self.met_str + ".Phi()",
-                #        'plot_cut': self.totalCut,
-                #        'binning': '(25, -3.1416, 3.1416)'
-                #},
+                {
+                        'name': 'met_phi_%s_%s_%s%s'%(self.llFlav, self.suffix, self.extraString, self.systematicString),
+                        'variable': self.met_str + ".Phi()",
+                        'plot_cut': self.totalCut,
+                        'binning': '(25, -3.1416, 3.1416)'
+                },
                 #{
                 #        'name': 'll_eta_%s_%s_%s%s'%(self.llFlav, self.suffix, self.extraString, self.systematicString),
                 #        'variable': self.baseObject + ".ll_p4.Eta()",
@@ -1313,6 +1317,26 @@ class BasePlotter:
                     'plot_cut': self.totalCut,
                     'binning': '(2, 0, 2)',
                     'type': 'bool'
+                },
+            ])
+            self.event_number_plot.extend([
+                {
+                    'name': 'event_run_%s_%s_%s%s'%(self.llFlav, self.suffix, self.extraString, self.systematicString),
+                    'variable': "event_run",
+                    'plot_cut': self.totalCut,
+                    'binning': '(500, -10000, 10000)'
+                },
+                {
+                    'name': 'event_lumi_%s_%s_%s%s'%(self.llFlav, self.suffix, self.extraString, self.systematicString),
+                    'variable': "event_lumi",
+                    'plot_cut': self.totalCut,
+                    'binning': '(500, -10000, 10000)'
+                },
+                {
+                    'name': 'event_event_%s_%s_%s%s'%(self.llFlav, self.suffix, self.extraString, self.systematicString),
+                    'variable': "event_event",
+                    'plot_cut': self.totalCut,
+                    'binning': '(500, -10000, 10000)'
                 },
             ])
             

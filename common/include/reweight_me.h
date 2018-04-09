@@ -10,10 +10,10 @@
 
 #include "MatrixElements/pp_hh_5coup/SubProcesses/P1_Sigma_BSM_gg_hh_gg_hh/P1_Sigma_BSM_gg_hh_gg_hh.h"
 
-#include "MatrixElements/pp_hh_all_MV/SubProcesses/P0_gg_hh/wrapper.h"
-#include "MatrixElements/pp_hh_all_MV/SubProcesses/P1_gg_hh/wrapper.h"
-#include "MatrixElements/pp_hh_all_MV/SubProcesses/P2_gg_hh/wrapper.h"
-#include "MatrixElements/pp_hh_tree_MV/SubProcesses/P1_Sigma_modTEFT_H_gg_hh/P1_Sigma_modTEFT_H_gg_hh.h"
+//#include "MatrixElements/pp_hh_all_MV/SubProcesses/P0_gg_hh/wrapper.h"
+//#include "MatrixElements/pp_hh_all_MV/SubProcesses/P1_gg_hh/wrapper.h"
+//#include "MatrixElements/pp_hh_all_MV/SubProcesses/P2_gg_hh/wrapper.h"
+//#include "MatrixElements/pp_hh_tree_MV/SubProcesses/P1_Sigma_modTEFT_H_gg_hh/P1_Sigma_modTEFT_H_gg_hh.h"
 
 //typedef ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double>> LorentzVector;
 
@@ -25,6 +25,8 @@
 
 const std::vector< std::map<std::string, double> > clustering_couplings;
 const std::vector< std::string > clustering_coupling_names;
+
+enum class BMVER { V1, V3 };
 
 // couplings for "v1" benchmarks
 const std::map< int, std::map<std::string, double> > benchmark_couplings_v1 {
@@ -285,7 +287,7 @@ class HHEFTReweighter {
         ////////////////////  CLUSTERING MODEL ////////////////////////////
         ///////////////////////////////////////////////////////////////////
 
-        double getBenchmarkME(const LorentzVector& h1, const LorentzVector& h2, const int bm, double alpha_s=0);
+        double getBenchmarkME(const LorentzVector& h1, const LorentzVector& h2, const int bm, double alpha_s=0, BMVER ver=BMVER::V3);
 
         double getACParamsME(const LorentzVector& h1, const LorentzVector& h2, const std::map<std::string, double>& params, double alpha_s=0);
 
@@ -297,7 +299,7 @@ class HHEFTReweighter {
         ////////////////  MALTONI ET AL. MODEL ////////////////////////////
         ///////////////////////////////////////////////////////////////////
 
-        double getMVParamsME(const LorentzVector& h1, const LorentzVector& h2, const std::map<std::string, double>& params, double alpha_s=0);
+        /*double getMVParamsME(const LorentzVector& h1, const LorentzVector& h2, const std::map<std::string, double>& params, double alpha_s=0);
 
         double getMVTermME(const LorentzVector& h1, const LorentzVector& h2, int op_1, int op_2, double alpha_s=0);
         
@@ -305,7 +307,7 @@ class HHEFTReweighter {
         void getAllMVTermsME(const LorentzVector& h1, const LorentzVector& h2, std::vector<double> &weights, double alpha_s=0);
 
         // All terms involving OphiG, Mr. Pain in the Ass
-        void getCustomMVTermsME(const LorentzVector& h1, const LorentzVector& h2, double &weight_sm_ophig, double & weight_ophig_sq, std::vector<double> &weights_ophig_ops, double alpha_s=0);
+        void getCustomMVTermsME(const LorentzVector& h1, const LorentzVector& h2, double &weight_sm_ophig, double & weight_ophig_sq, std::vector<double> &weights_ophig_ops, double alpha_s=0);*/
 
         ///////////////////////////////////////////////////////////////////
         ////////////////////////  HELPER STUFF ////////////////////////////
@@ -323,10 +325,10 @@ class HHEFTReweighter {
     private:
 
         std::shared_ptr<EFTMEEvaluatorBase> m_evaluator_AC;
-        std::shared_ptr<EFTMEEvaluatorBase> m_evaluator_MV_noTree;
+        /*std::shared_ptr<EFTMEEvaluatorBase> m_evaluator_MV_noTree;
         std::shared_ptr<momemta::MatrixElement> m_me_MV_SM_OphiG;
         std::shared_ptr<momemta::MatrixElement> m_me_MV_OphiG_ops;
-        std::shared_ptr<momemta::MatrixElement> m_me_MV_OphiG_sq;
+        std::shared_ptr<momemta::MatrixElement> m_me_MV_OphiG_sq;*/
 };
 
 HHEFTReweighter& getHHEFTReweighter(std::string ME_dir=".");

@@ -8,16 +8,8 @@ import numpy as np
 
 import argparse
 
-from cp3_llbb.CommonTools.condorTools import condorSubmitter
-
-# Add default ingrid storm package
-sys.path.append('/nfs/soft/python/python-2.7.5-sl6_amd64_gcc44/lib/python2.7/site-packages/storm-0.20-py2.7-linux-x86_64.egg')
-sys.path.append('/nfs/soft/python/python-2.7.5-sl6_amd64_gcc44/lib/python2.7/site-packages/MySQL_python-1.2.3-py2.7-linux-x86_64.egg')
-
-CMSSW_BASE = os.environ['CMSSW_BASE']
-SCRAM_ARCH = os.environ['SCRAM_ARCH']
-sys.path.append(os.path.join(CMSSW_BASE, 'bin', SCRAM_ARCH))
-from SAMADhi import Dataset, Sample, DbStore
+from cp3_llbb.CommonTools.slurmTools import slurmSubmitter
+from cp3_llbb.SAMADhi.SAMADhi import Dataset, Sample, DbStore
 
 import inspect
 scriptDir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
@@ -52,7 +44,7 @@ def get_sample(iSample):
     resultset = dbstore.find(Sample, Sample.sample_id == iSample)
     return resultset.one()
 
-# Configure number of files processed by each condor job -- NOT used
+# Configure number of files processed by each slurm job -- NOT used
 # Factor is passed as argument to script
 # `sample` is DB name
 def get_sample_splitting(sample, factor=2):
@@ -67,7 +59,7 @@ def get_sample_splitting(sample, factor=2):
         nfiles = 20
     return nfiles * factor
 
-# Configure number of events processed by each condor job
+# Configure number of events processed by each slurm job
 # Factor is passed as argument to script
 # `sample` is DB name
 def get_sample_events_per_job(sample, factor=1):
@@ -83,9 +75,9 @@ def get_sample_events_per_job(sample, factor=1):
 workflows = {}
 
 # Signal grid for resonant samples
-# resonant_signal_grid = [260, 270, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 900]
+resonant_signal_grid = [260, 270, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 900]
 # resonant_signal_grid = [400, 650, 900] # Postfit mode
-resonant_signal_grid = [] # Only non-resonant
+# resonant_signal_grid = [] # Only non-resonant
 # resonant_signal_grid = list(np.concatenate([ np.arange(260, 351, 5, dtype=int), np.arange(360, 901, 10, dtype=int) ]))
 
 # Reweighting grid for non-resonant signals
@@ -95,7 +87,11 @@ def check_grid_klambda(grid):
             grid.remove(p)
             grid.append( (0.0001, p[1]) )
 
+# Grid used for NN training
 nonresonant_signal_grid = [ (kl, kt) for kl in [-20, -5, 0, 1, 2.4, 3.8, 5, 20] for kt in [0.5, 1, 1.75, 2.5] ]
+
+# Grid of points "closest" to the benchmarks according to the test statistic
+# nonresonant_signal_grid = [ (1., 1.), (4.1, 1.59), (1.7, 2.27), (1.8, 2.09), (-0.1, 2.5), (3., 1.27), (3.9, 1.4), (9.6, 1.81), (5.1, 2.2), (2.1, 1.03), (7.7, 2.15), (5.4, 1.79), (-2.1, 0.29) ]
 
 # Set of extra points for 1D/2D scans, comment if not needed
 extra_1d_signals = []
@@ -256,7 +252,8 @@ NN2DPlots_ForMC = Configuration('generatePlots.py', workflow='plot_nn_2d', mode=
             'syst_split_jec': True,
             #'syst_only_jec': True,
         })
-NN2DPlots_ForData = Configuration('generatePlots.py', workflow='plot_nn_2d', suffix='_for_data', mode='plots', samples=['Data'], generation_args={
+NN2DPlots_ForData = Configuration('generatePlots.py', workflow='plot_nn_2d', suffix='_for_data', mode='plots', samples=['Data'],
+        generation_args={
             'sample_type': 'Data',
             'llbb_stages': ['mll_cut'],
             'llbb_plots': ['mjj_vs_nn'],
@@ -265,8 +262,8 @@ NN2DPlots_ForData = Configuration('generatePlots.py', workflow='plot_nn_2d', suf
             #'syst_only_jec': True,
         })
 NN2DPlots_ForSignal = Configuration('generatePlots.py', workflow='plot_nn_2d', suffix='_for_signal', mode='plots', samples=[
-    'Signal_NonResonant',
-    'Signal_Resonant'
+        'Signal_NonResonant',
+        'Signal_Resonant'
     ], generation_args={
             'sample_type': 'Signal',
             'llbb_stages': ['mll_cut'],
@@ -277,38 +274,38 @@ NN2DPlots_ForSignal = Configuration('generatePlots.py', workflow='plot_nn_2d', s
         })
 
 # Testing area
-TestPlots_ForMC = Configuration('generatePlots.py', workflow='test', mode='plots', samples=[
-            "Main_Training",
-            "DY_NLO",
-            "Higgs",
-            "VV_VVV",
-            "Top_Other",
-            "WJets",
-        ], generation_args={
-            'sample_type': 'MC',
-            'llbb_stages': ['mll_cut'],
-            'llbb_plots': ['basic', 'nn', 'mjj_vs_nn'],
-            'syst': True,
-            'syst_split_jec': True,
+#TestPlots_ForMC = Configuration('generatePlots.py', workflow='test', mode='plots', samples=[
+#            "Main_Training",
+#            "DY_NLO",
+#            "Higgs",
+#            "VV_VVV",
+#            "Top_Other",
+#            "WJets",
+#        ], generation_args={
+#            'sample_type': 'MC',
+#            'llbb_stages': ['mll_peak'],
+#            'llbb_plots': ['basic'],
+#            'syst': False,
+#            'syst_split_jec': True,
+#        })
+TestPlots_ForData = Configuration('generateTrees.py', workflow='test', suffix='_for_data', mode='skim', samples=['Data'], generation_args={
+            'do_lljj': False,
+            'do_llbb': True,
+            'stage': 'mll_cut',
+            'flavour': 'All',
+            'branches': ['event']
         })
-TestPlots_ForData = Configuration('generatePlots.py', workflow='test', suffix='_for_data', mode='plots', samples=['Data'], generation_args={
-            'sample_type': 'Data',
-            'llbb_stages': ['mll_cut'],
-            'llbb_plots': ['basic', 'nn', 'mjj_vs_nn'],
-            'syst': True,
-            'syst_split_jec': True,
-        })
-TestPlots_ForSignal = Configuration('generatePlots.py', workflow='test', suffix='_for_signal', mode='plots', samples=['Signal_NonResonant', 'Signal_BM_Resonant'], generation_args={
-            'sample_type': 'Signal',
-            'llbb_stages': ['mll_cut'],
-            'llbb_plots': ['basic', 'nn', 'mjj_vs_nn'],
-            'syst': True,
-            'syst_split_jec': True,
-        })
+#TestPlots_ForSignal = Configuration('generatePlots.py', workflow='test', suffix='_for_signal', mode='plots', samples=['Signal_NonResonant', 'Signal_BM_Resonant'], generation_args={
+#            'sample_type': 'Signal',
+#            'llbb_stages': ['mll_cut'],
+#            'llbb_plots': ['basic', 'nn', 'mjj_vs_nn'],
+#            'syst': True,
+#            'syst_split_jec': True,
+#        })
 
 ##### Parse arguments and do actual work ####
 
-parser = argparse.ArgumentParser(description='Facility to submit histFactory jobs on condor.')
+parser = argparse.ArgumentParser(description='Facility to submit histFactory jobs on slurm.')
 parser.add_argument('-o', '--output', dest='output', default=str(datetime.date.today()), help='Name of the output directory.', required=True)
 parser.add_argument('-s', '--submit', help='Choice to actually submit the jobs or not.', action="store_true")
 parser.add_argument('-f', '--factor', dest='factor', type=int, default=1, help='Factor to multiply number of files sent to each job')
@@ -408,12 +405,12 @@ if not args.skip:
 
 ## Write files needed to run on cluster
 
-def create_condor(samples, output, executable):
-    ## Create Condor submitter to handle job creating
-    mySub = condorSubmitter(samples, "%s/build/" % output + executable, "DUMMY", output + "/", rescale=True)
+def create_slurm(samples, output, executable):
+    ## Create slurm submitter to handle job creating
+    mySub = slurmSubmitter(samples, "%s/build/" % output + executable, output + "/", rescale=True, memory=2000, runtime="360")
 
-    ## Create test_condor directory and subdirs
-    mySub.setupCondorDirs()
+    ## Create test_slurm directory and subdirs
+    mySub.setupDirs()
 
     splitTT = True
     splitDY = False
@@ -521,8 +518,8 @@ def create_condor(samples, output, executable):
             mySub.sampleCfg.append(dy_xx_sample)
 
         # Merging with HT binned sample: add cut on inclusive one
-        if 'DYJetsToLL_M-5to50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8' in sample["db_name"] or 'DYJetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8' in sample["db_name"]:
-            sample["json_skeleton"][sample["db_name"]]["sample_cut"] = "event_ht < 100"
+        # if 'DYJetsToLL_M-5to50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8' in sample["db_name"] or 'DYJetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8' in sample["db_name"]:
+            # sample["json_skeleton"][sample["db_name"]]["sample_cut"] = "event_ht < 100"
 
         #if 'WJetsToLNu_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8' in sample["db_name"]:
         #    sample["json_skeleton"][sample["db_name"]]["sample_cut"] = "event_ht < 100"
@@ -551,42 +548,6 @@ def create_condor(samples, output, executable):
                 mySub.sampleCfg.append(newSample)
 
             mySub.sampleCfg.remove(sample)
-
-        ## Cluster to 1507 points reweighting (template-based)
-        #if "all_nodes" in sample["db_name"]:
-        #    ## For v1->v1 reweighting check:
-        #    #for node in range(2, 14):
-        #    #    node_str = "node_rwgt_" + str(node)
-        #    #for node in range(1, 13):
-
-        #    #    newSample = copy.deepcopy(sample)
-        #    #    newJson = copy.deepcopy(sample["json_skeleton"][sample["db_name"]])
-        #    #
-        #    #    node_str = "node_" + str(node)
-        #    #    newSample["db_name"] = sample["db_name"].replace("all_nodes", node_str)
-        #    #    newJson["sample-weight"] = "cluster_" + node_str
-        #    #
-        #    #    newSample["json_skeleton"][newSample["db_name"]] = newJson
-        #    #    newSample["json_skeleton"].pop(sample["db_name"])
-        #    #    mySub.sampleCfg.append(newSample)
-        #
-        #    # 1507 points
-        #    for node in range(0, 1507):
-        #        # Skip dummy Xanda
-        #        if node in [324, 910, 985, 990]: continue
-
-        #        newSample = copy.deepcopy(sample)
-        #        newJson = copy.deepcopy(sample["json_skeleton"][sample["db_name"]])
-        #
-        #        node_str = "point_" + str(node)
-        #        newSample["db_name"] = sample["db_name"].replace("all_nodes", node_str)
-        #        newJson["sample-weight"] = node_str
-        #
-        #        newSample["json_skeleton"][newSample["db_name"]] = newJson
-        #        newSample["json_skeleton"].pop(sample["db_name"])
-        #        mySub.sampleCfg.append(newSample)
-
-        #    mySub.sampleCfg.remove(sample)
 
         ## Cluster to MV reweighting (ME-based)
         #operators_MV = ["OtG", "Otphi", "O6", "OH"]
@@ -618,20 +579,20 @@ def create_condor(samples, output, executable):
         #
         #                mySub.sampleCfg.append(newSample)
 
-    ## Write command and data files in the condor directory
-    mySub.createCondorFiles()
+    ## Write command and data files in the slurm directory
+    mySub.createFiles()
 
     # Actually submit the jobs
-    # It is recommended to do a dry-run first without submitting to condor
+    # It is recommended to do a dry-run first without submitting to slurm
     if args.submit:
-       mySub.submitOnCondor()
+       mySub.submit()
 
 for c in configurations:
     if len(c.sample_ids) == 0:
         continue
 
-    condor_samples = []
+    slurm_samples = []
     for id in c.sample_ids:
-        condor_samples.append({'ID': id, 'events_per_job': get_sample_events_per_job(get_sample(id).name, args.factor)})
+        slurm_samples.append({'ID': id, 'events_per_job': get_sample_events_per_job(get_sample(id).name, args.factor)})
 
-    create_condor(condor_samples, args.output + c.suffix, c.executable)
+    create_slurm(slurm_samples, args.output + c.suffix, c.executable)
